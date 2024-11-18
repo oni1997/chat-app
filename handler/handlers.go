@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"chat-app/internal/models"
+	"chat-app/models"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -79,7 +79,6 @@ func saveMessageToFile(msg models.Message) error {
 	messages = append(messages, msg)
 	mu.Unlock()
 
-	// Save to file
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -278,7 +277,6 @@ func Login(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
-	// Create new user
 	userID := generateID()
 	user := models.User{
 		ID:        userID,
@@ -286,7 +284,6 @@ func Login(c echo.Context) error {
 		CreatedAt: time.Now(),
 	}
 
-	// Create session
 	sessionID := generateID()
 
 	mu.Lock()

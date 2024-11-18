@@ -1,7 +1,7 @@
 package main
 
 import (
-	"chat-app/internal/handler"
+	"chat-app/handler"
 	"github.com/labstack/echo/v4"
 )
 
