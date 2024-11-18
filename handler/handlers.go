@@ -74,21 +74,21 @@ func SaveMessages() {
 	}
 }
 
-func saveMessageToFile(msg models.Message) error {
-	mu.Lock()
-	messages = append(messages, msg)
-	mu.Unlock()
-
-	mu.Lock()
-	defer mu.Unlock()
-
-	data, err := json.MarshalIndent(messages, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile(dataFile, data, 0644)
-}
+//func saveMessageToFile(msg models.Message) error {
+//	mu.Lock()
+//	messages = append(messages, msg)
+//	mu.Unlock()
+//
+//	mu.Lock()
+//	defer mu.Unlock()
+//
+//	data, err := json.MarshalIndent(messages, "", "  ")
+//	if err != nil {
+//		return err
+//	}
+//
+//	return os.WriteFile(dataFile, data, 0644)
+//}
 
 func ChatPage(c echo.Context) error {
 	cookie, err := c.Cookie("session")
@@ -317,43 +317,6 @@ func Logout(c echo.Context) error {
 	return c.Redirect(http.StatusSeeOther, "/")
 }
 
-//func SendMessage(c echo.Context) error {
-//	cookie, err := c.Cookie("session")
-//	if err != nil {
-//		return c.Redirect(http.StatusSeeOther, "/")
-//	}
-//
-//	mu.Lock()
-//	userID, exists := sessions[cookie.Value]
-//	user := users[userID]
-//	mu.Unlock()
-//
-//	if !exists {
-//		return c.Redirect(http.StatusSeeOther, "/")
-//	}
-//
-//	content := c.FormValue("message")
-//	if content == "" {
-//		return GetMessages(c)
-//	}
-//
-//	newMessage := models.Message{
-//		ID:        generateID(),
-//		UserID:    userID,
-//		UserName:  user.Name,
-//		Content:   content,
-//		CreatedAt: time.Now(),
-//	}
-//
-//	mu.Lock()
-//	messages = append(messages, newMessage)
-//	mu.Unlock()
-//
-//	SaveMessages()
-//
-//	return GetMessages(c)
-//}
-
 func SendMessage(c echo.Context) error {
 	cookie, err := c.Cookie("session")
 	if err != nil {
@@ -382,48 +345,56 @@ func SendMessage(c echo.Context) error {
 		CreatedAt: time.Now(),
 	}
 
-	// Save the new message
-	if err := saveMessageToFile(newMessage); err != nil {
-		// Handle error appropriately
-		return c.String(http.StatusInternalServerError, "Error saving message")
-	}
+	mu.Lock()
+	messages = append(messages, newMessage)
+	mu.Unlock()
+
+	SaveMessages()
 
 	return GetMessages(c)
 }
 
-//func GetMessages(c echo.Context) error {
+//func SendMessage(c echo.Context) error {
 //	cookie, err := c.Cookie("session")
 //	if err != nil {
 //		return c.Redirect(http.StatusSeeOther, "/")
 //	}
 //
 //	mu.Lock()
-//	userID := sessions[cookie.Value]
-//	messagesCopy := make([]models.Message, len(messages))
-//	copy(messagesCopy, messages)
+//	userID, exists := sessions[cookie.Value]
+//	user := users[userID]
 //	mu.Unlock()
 //
-//	var chatContent string
-//	for _, msg := range messagesCopy {
-//		class := "other"
-//		if msg.UserID == userID {
-//			class = "self"
-//		}
-//		chatContent += `<div class="chat-bubble ` + class + `"><strong>` + msg.UserName + `:</strong> ` + msg.Content + `</div>`
+//	if !exists {
+//		return c.Redirect(http.StatusSeeOther, "/")
 //	}
 //
-//	return c.HTML(http.StatusOK, chatContent)
+//	content := c.FormValue("message")
+//	if content == "" {
+//		return GetMessages(c)
+//	}
+//
+//	newMessage := models.Message{
+//		ID:        generateID(),
+//		UserID:    userID,
+//		UserName:  user.Name,
+//		Content:   content,
+//		CreatedAt: time.Now(),
+//	}
+//
+//	// Save the new message
+//	if err := saveMessageToFile(newMessage); err != nil {
+//		// Handle error appropriately
+//		return c.String(http.StatusInternalServerError, "Error saving message")
+//	}
+//
+//	return GetMessages(c)
 //}
 
 func GetMessages(c echo.Context) error {
 	cookie, err := c.Cookie("session")
 	if err != nil {
 		return c.Redirect(http.StatusSeeOther, "/")
-	}
-
-	// Load messages from file
-	if err := loadMessagesFromFile(); err != nil {
-		return c.String(http.StatusInternalServerError, "Error loading messages")
 	}
 
 	mu.Lock()
@@ -443,3 +414,32 @@ func GetMessages(c echo.Context) error {
 
 	return c.HTML(http.StatusOK, chatContent)
 }
+
+//func GetMessages(c echo.Context) error {
+//	cookie, err := c.Cookie("session")
+//	if err != nil {
+//		return c.Redirect(http.StatusSeeOther, "/")
+//	}
+//
+//	// Load messages from file
+//	if err := loadMessagesFromFile(); err != nil {
+//		return c.String(http.StatusInternalServerError, "Error loading messages")
+//	}
+//
+//	mu.Lock()
+//	userID := sessions[cookie.Value]
+//	messagesCopy := make([]models.Message, len(messages))
+//	copy(messagesCopy, messages)
+//	mu.Unlock()
+//
+//	var chatContent string
+//	for _, msg := range messagesCopy {
+//		class := "other"
+//		if msg.UserID == userID {
+//			class = "self"
+//		}
+//		chatContent += `<div class="chat-bubble ` + class + `"><strong>` + msg.UserName + `:</strong> ` + msg.Content + `</div>`
+//	}
+//
+//	return c.HTML(http.StatusOK, chatContent)
+//}
